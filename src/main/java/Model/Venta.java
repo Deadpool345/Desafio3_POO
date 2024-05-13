@@ -1,9 +1,6 @@
 package Model;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +11,6 @@ public class Venta {
     private String descripcion;
 
     public Venta() {
-        // Constructor vacío
     }
 
     public Venta(int idVenta, int idLinea, String fechaVenta, String descripcion) {
@@ -24,7 +20,6 @@ public class Venta {
         this.descripcion = descripcion;
     }
 
-    // Getters y setters
     public int getIdVenta() {
         return idVenta;
     }
@@ -58,49 +53,22 @@ public class Venta {
     }
 
     // Métodos CRUD
-    public boolean crearVenta(Connection connection) throws SQLException {
-        String query = "INSERT INTO ventas (id_linea, fecha_venta, descripcion) VALUES (?, ?, ?)";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, this.idLinea);
-            statement.setString(2, this.fechaVenta);
-            statement.setString(3, this.descripcion);
-            return statement.executeUpdate() > 0;
-        }
-    }
+    public static void agregarVenta(int idLinea, Date fechaVenta, String descripcion) throws SQLException {
+        // Establecer conexión a la base de datos
+        String url = "jdbc:mysql://localhost:3306/inventario";
+        String user = "root";
+        String password = "";
+        try (Connection conn = DriverManager.getConnection(url, user, password)) {
+            // Preparar la consulta SQL para agregar una nueva venta
+            String sql = "INSERT INTO ventas (id_linea, fecha_venta, descripcion) VALUES (?, ?, ?)";
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, idLinea);
+                pstmt.setDate(2, fechaVenta);
+                pstmt.setString(3, descripcion);
 
-    public static List<Venta> obtenerVentas(Connection connection) throws SQLException {
-        List<Venta> ventas = new ArrayList<>();
-        String query = "SELECT * FROM ventas";
-        try (PreparedStatement statement = connection.prepareStatement(query);
-             ResultSet resultSet = statement.executeQuery()) {
-            while (resultSet.next()) {
-                Venta venta = new Venta();
-                venta.setIdVenta(resultSet.getInt("id_venta"));
-                venta.setIdLinea(resultSet.getInt("id_linea"));
-                venta.setFechaVenta(resultSet.getString("fecha_venta"));
-                venta.setDescripcion(resultSet.getString("descripcion"));
-                ventas.add(venta);
+                // Ejecutar la consulta SQL
+                pstmt.executeUpdate();
             }
-        }
-        return ventas;
-    }
-
-    public boolean actualizarVenta(Connection connection) throws SQLException {
-        String query = "UPDATE ventas SET id_linea=?, fecha_venta=?, descripcion=? WHERE id_venta=?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, this.idLinea);
-            statement.setString(2, this.fechaVenta);
-            statement.setString(3, this.descripcion);
-            statement.setInt(4, this.idVenta);
-            return statement.executeUpdate() > 0;
-        }
-    }
-
-    public boolean eliminarVenta(Connection connection) throws SQLException {
-        String query = "DELETE FROM ventas WHERE id_venta=?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, this.idVenta);
-            return statement.executeUpdate() > 0;
         }
     }
 }
